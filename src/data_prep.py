@@ -42,3 +42,15 @@ plt.legend()
 plt.grid(axis="y", linestyle="--", alpha=0.4)
 plt.tight_layout()
 plt.show()
+
+# check duplicate data 
+duplicated_rows_num = data.duplicated().sum()
+print(f"Number of duplicate rows: {duplicated_rows_num:,}")
+
+# check class of duplicated_rows
+duplicated_rows = data[data.duplicated()]
+print(duplicated_rows["Class"].value_counts())
+
+# Remove duplicate rows
+data = data.drop_duplicates()
+print(f"New dataset shape: {data.shape}")
