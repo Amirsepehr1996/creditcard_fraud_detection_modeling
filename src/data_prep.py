@@ -54,3 +54,11 @@ print(duplicated_rows["Class"].value_counts())
 # Remove duplicate rows
 data = data.drop_duplicates()
 print(f"New dataset shape: {data.shape}")
+
+# feature engineering (column = time)
+data['Hour'] = (data['Time'] % (24 * 3600)) / 3600
+data = data.drop('Time', axis=1)
+data.info()
+
+
+
