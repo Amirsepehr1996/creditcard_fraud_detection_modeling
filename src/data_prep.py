@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
 # import data
 data = pd.read_csv(
@@ -60,5 +62,21 @@ data['Hour'] = (data['Time'] % (24 * 3600)) / 3600
 data = data.drop('Time', axis=1)
 data.info()
 
+# Define X and y 
+X = data.drop('Class', axis=1)
+y = data['Class']
 
+# Train and Test Split
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.2,
+    stratify=y,
+    random_state=42
+)
+
+# Scaling
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
 
