@@ -24,49 +24,49 @@ skf = StratifiedKFold(
 print(type(X))
 print(type(y))
 
-# K = [3, 5, 7, 10, 15, 20]
+K = [3, 5, 7, 10, 15, 20]
 
-# results = []
+results = []
 
-# for k in K:
+for k in K:
 
-#     recalls = []
-#     precisions = []
-#     f1_scores = []
+    recalls = []
+    precisions = []
+    f1_scores = []
 
-#     for train_idx, test_idx in skf.split(X, y):
+    for train_idx, test_idx in skf.split(X, y):
 
-#         X_train = X[train_idx]
-#         X_test = X[test_idx]
+        X_train = X[train_idx]
+        X_test = X[test_idx]
 
-#         y_train = y.iloc[train_idx]
-#         y_test = y.iloc[test_idx]
+        y_train = y.iloc[train_idx]
+        y_test = y.iloc[test_idx]
 
-#         model = KNeighborsClassifier(
-#             n_neighbors=k
-#         )
+        model = KNeighborsClassifier(
+            n_neighbors=k
+        )
 
-#         model.fit(X_train, y_train)
+        model.fit(X_train, y_train)
 
-#         y_pred = model.predict(X_test)
+        y_pred = model.predict(X_test)
 
-#         recalls.append(recall_score(y_test, y_pred))
-#         precisions.append(precision_score(y_test, y_pred))
-#         f1_scores.append(f1_score(y_test, y_pred))
+        recalls.append(recall_score(y_test, y_pred))
+        precisions.append(precision_score(y_test, y_pred))
+        f1_scores.append(f1_score(y_test, y_pred))
 
-#     results.append({
-#         "Number_of_Neighbors": k,
-#         "Mean Recall": np.mean(recalls),
-#         "Std Recall": np.std(recalls),
-#         "Mean Precision": np.mean(precisions),
-#         "Std Precision": np.std(precisions),
-#         "Mean F1-Score": np.mean(f1_scores),
-#         "Std F1-Score": np.std(f1_scores)
-#     })
+    results.append({
+        "Number_of_Neighbors": k,
+        "Mean Recall": np.mean(recalls),
+        "Std Recall": np.std(recalls),
+        "Mean Precision": np.mean(precisions),
+        "Std Precision": np.std(precisions),
+        "Mean F1-Score": np.mean(f1_scores),
+        "Std F1-Score": np.std(f1_scores)
+    })
 
-# results = pd.DataFrame(results)
+results = pd.DataFrame(results)
 
-# print(results)
+print(results)
 
 
 # Training using all train data
