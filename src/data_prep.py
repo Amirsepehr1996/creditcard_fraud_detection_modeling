@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+import joblib
 
 # import data
 data = pd.read_csv(
@@ -80,3 +81,17 @@ scaler = StandardScaler()
 X_train_scaled = scaler.fit_transform(X_train)
 X_test_scaled = scaler.transform(X_test)
 
+# save the processed data
+
+joblib.dump(
+    {
+        "X_train": X_train_scaled,
+        "X_test": X_test_scaled,
+        "y_train": y_train,
+        "y_test": y_test,
+        "scaler": scaler,
+    },
+    r"E:\maktab_sharif\mini_project1_week9\mini-project-01\data\processed_data.pkl"
+)
+
+print("Processed data saved successfully.")
