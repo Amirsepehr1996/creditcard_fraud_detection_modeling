@@ -1,7 +1,6 @@
 import joblib
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import recall_score, precision_score, f1_score
 import torch
@@ -9,19 +8,21 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import TensorDataset, DataLoader
 
+torch.manual_seed(42)
+
 # Load the processed data
 data = joblib.load(
     r"E:\maktab_sharif\mini_project1_week9\mini-project-01\data\processed_data.pkl"
 )
 
-X = data["X_train"]
+X = np.asarray(data["X_train"])
 y = data["y_train"]
 
 print(type(X))
 print(type(y))
 
 skf = StratifiedKFold(
-    n_splits=5,
+    n_splits=3,
     shuffle=True,
     random_state=42
 )
@@ -42,8 +43,7 @@ class MLP(nn.Module):
             nn.ReLU(),
             nn.Linear(32, 16),
             nn.ReLU(),
-            nn.Linear(16, 1),
-            nn.Sigmoid()
+            nn.Linear(16, 1)
         )
 
     def forward(self, x):
@@ -67,13 +67,16 @@ for alpha in learning_rates:
 
         model = MLP()
 
-        criterion = nn.BCELoss()
+        n_pos = y_train_tensor.sum()
+        n_neg = len(y_train_tensor) - n_pos
+        pos_weight = (n_neg / n_pos).clone().detach()
+
+        criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
         optimizer = optim.Adam(model.parameters(), lr=alpha)
 
         epochs = 100
 
         loss_history = []
-        loss_history_batch = []
 
         for epoch in range(epochs):
 
@@ -98,7 +101,6 @@ for alpha in learning_rates:
                 optimizer.step()
 
                 total_loss += loss.item()
-                loss_history_batch.append(loss.item())
 
             avg_loss = total_loss / len(train_loader)
             loss_history.append(avg_loss)
@@ -112,15 +114,16 @@ for alpha in learning_rates:
         model.eval()
 
         with torch.no_grad():
-            outputs = model(X_test_tensor)
+            logits = model(X_test_tensor)
+            outputs = torch.sigmoid(logits)
             predictions = (outputs >= 0.5).float()
 
         y_test = y_test_tensor.numpy().ravel()
         y_pred = predictions.numpy().ravel()
 
-        recalls.append(recall_score(y_test, y_pred))
-        precisions.append(precision_score(y_test, y_pred))
-        f1_scores.append(f1_score(y_test, y_pred))
+        recalls.append(recall_score(y_test, y_pred, zero_division=0))
+        precisions.append(precision_score(y_test, y_pred, zero_division=0))
+        f1_scores.append(f1_score(y_test, y_pred, zero_division=0))
 
     results.append({
         "Learning_Rate": alpha,
@@ -135,4 +138,3 @@ for alpha in learning_rates:
 results = pd.DataFrame(results)
 
 print(results)
-
