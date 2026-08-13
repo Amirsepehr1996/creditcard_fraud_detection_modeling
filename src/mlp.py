@@ -27,7 +27,7 @@ skf = StratifiedKFold(
     random_state=42
 )
 
-learning_rates = [0.5, 0.1, 0.05, 0.01, 0.005]
+learning_rates = [0.005, 0.006, 0.007]
 
 results = []
 
