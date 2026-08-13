@@ -1,7 +1,7 @@
 import joblib
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import StratifiedKFold, train_test_split
 from sklearn.metrics import recall_score, precision_score, f1_score
 import torch
 import torch.nn as nn
@@ -27,7 +27,7 @@ skf = StratifiedKFold(
     random_state=42
 )
 
-learning_rates = [0.005, 0.006, 0.007]
+learning_rates = [0.005]
 
 results = []
 
@@ -57,9 +57,21 @@ for alpha in learning_rates:
     f1_scores = []
 
     for train_idx, test_idx in skf.split(X, y):
-        X_train_tensor = torch.tensor(X[train_idx], dtype=torch.float32)
+
+        # carve a validation set out of this fold's training data
+        train_idx_inner, val_idx = train_test_split(
+            train_idx,
+            test_size=0.15,
+            stratify=y.iloc[train_idx],
+            random_state=42
+        )
+
+        X_train_tensor = torch.tensor(X[train_idx_inner], dtype=torch.float32)
+        X_val_tensor = torch.tensor(X[val_idx], dtype=torch.float32)
         X_test_tensor = torch.tensor(X[test_idx], dtype=torch.float32)
-        y_train_tensor = torch.tensor(y.iloc[train_idx].values, dtype=torch.float32).reshape(-1, 1)
+
+        y_train_tensor = torch.tensor(y.iloc[train_idx_inner].values, dtype=torch.float32).reshape(-1, 1)
+        y_val_tensor = torch.tensor(y.iloc[val_idx].values, dtype=torch.float32).reshape(-1, 1)
         y_test_tensor = torch.tensor(y.iloc[test_idx].values, dtype=torch.float32).reshape(-1, 1)
 
         train_dataset = TensorDataset(X_train_tensor, y_train_tensor)
@@ -75,6 +87,12 @@ for alpha in learning_rates:
         optimizer = optim.Adam(model.parameters(), lr=alpha)
 
         epochs = 100
+        patience = 10        # epochs to wait for improvement before stopping
+        min_delta = 1e-4     # minimum change to count as improvement
+
+        best_val_loss = float("inf")
+        epochs_no_improve = 0
+        best_model_state = None
 
         loss_history = []
 
@@ -105,11 +123,33 @@ for alpha in learning_rates:
             avg_loss = total_loss / len(train_loader)
             loss_history.append(avg_loss)
 
+            # --- validation step ---
+            model.eval()
+            with torch.no_grad():
+                val_logits = model(X_val_tensor)
+                val_loss = criterion(val_logits, y_val_tensor).item()
+
             if (epoch + 1) % 10 == 0:
                 print(
                     f"LR={alpha} | Epoch {epoch+1}/{epochs}, "
-                    f"Loss: {avg_loss:.4f}"
+                    f"Train Loss: {avg_loss:.4f}, Val Loss: {val_loss:.4f}"
                 )
+
+            # --- early stopping check ---
+            if val_loss < best_val_loss - min_delta:
+                best_val_loss = val_loss
+                epochs_no_improve = 0
+                best_model_state = model.state_dict()
+            else:
+                epochs_no_improve += 1
+
+            if epochs_no_improve >= patience:
+                print(f"Early stopping at epoch {epoch+1} (best val loss: {best_val_loss:.4f})")
+                break
+
+        # restore best weights found during training
+        if best_model_state is not None:
+            model.load_state_dict(best_model_state)
 
         model.eval()
 
