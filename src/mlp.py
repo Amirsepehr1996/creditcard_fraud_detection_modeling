@@ -63,7 +63,7 @@ for alpha in learning_rates:
         y_test_tensor = torch.tensor(y.iloc[test_idx].values, dtype=torch.float32).reshape(-1, 1)
 
         train_dataset = TensorDataset(X_train_tensor, y_train_tensor)
-        train_loader = DataLoader(train_dataset, batch_size=256, shuffle=True)
+        train_loader = DataLoader(train_dataset, batch_size=512, shuffle=True)
 
         model = MLP()
 
@@ -116,7 +116,7 @@ for alpha in learning_rates:
         with torch.no_grad():
             logits = model(X_test_tensor)
             outputs = torch.sigmoid(logits)
-            predictions = (outputs >= 0.5).float()
+            predictions = (outputs >= 0.6).float()
 
         y_test = y_test_tensor.numpy().ravel()
         y_pred = predictions.numpy().ravel()
