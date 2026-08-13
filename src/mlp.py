@@ -74,7 +74,7 @@ for alpha in learning_rates:
         criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
         optimizer = optim.Adam(model.parameters(), lr=alpha)
 
-        epochs = 100
+        epochs = 50
 
         loss_history = []
 
@@ -116,7 +116,7 @@ for alpha in learning_rates:
         with torch.no_grad():
             logits = model(X_test_tensor)
             outputs = torch.sigmoid(logits)
-            predictions = (outputs >= 0.6).float()
+            predictions = (outputs >= 0.7).float()
 
         y_test = y_test_tensor.numpy().ravel()
         y_pred = predictions.numpy().ravel()
