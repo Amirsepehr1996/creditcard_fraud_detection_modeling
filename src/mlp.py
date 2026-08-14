@@ -41,9 +41,11 @@ class MLP(nn.Module):
             nn.ReLU(),
             nn.Linear(64, 32),
             nn.ReLU(),
-            nn.Linear(32, 16),
-            nn.ReLU(),
-            nn.Linear(16, 1)
+            # nn.Linear(32, 32),
+            # nn.ReLU(),
+            # nn.Linear(32,16),
+            # nn.ReLU(),
+            nn.Linear(32, 1)
         )
 
     def forward(self, x):
@@ -70,11 +72,16 @@ for alpha in learning_rates:
         n_pos = y_train_tensor.sum()
         n_neg = len(y_train_tensor) - n_pos
         pos_weight = (n_neg / n_pos).clone().detach()
+        pos_weight = torch.sqrt(pos_weight)
 
         criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
         optimizer = optim.Adam(model.parameters(), lr=alpha)
 
-        epochs = 50
+        epochs = 100
+
+        scheduler = optim.lr_scheduler.CosineAnnealingLR(
+            optimizer, T_max=epochs, eta_min=1e-6
+        )
 
         loss_history = []
 
@@ -105,10 +112,14 @@ for alpha in learning_rates:
             avg_loss = total_loss / len(train_loader)
             loss_history.append(avg_loss)
 
+            # Step the scheduler once per epoch (NOT per batch)
+            scheduler.step()
+
             if (epoch + 1) % 10 == 0:
+                current_lr = scheduler.get_last_lr()[0]
                 print(
                     f"LR={alpha} | Epoch {epoch+1}/{epochs}, "
-                    f"Loss: {avg_loss:.4f}"
+                    f"Loss: {avg_loss:.4f}, CurrentLR: {current_lr:.6f}"
                 )
 
         model.eval()
@@ -116,7 +127,7 @@ for alpha in learning_rates:
         with torch.no_grad():
             logits = model(X_test_tensor)
             outputs = torch.sigmoid(logits)
-            predictions = (outputs >= 0.7).float()
+            predictions = (outputs >= 0.3).float()
 
         y_test = y_test_tensor.numpy().ravel()
         y_pred = predictions.numpy().ravel()
