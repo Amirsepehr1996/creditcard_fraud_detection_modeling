@@ -1,6 +1,7 @@
 import joblib
 import numpy as np
 import pandas as pd
+import os
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import recall_score, precision_score, f1_score
@@ -72,6 +73,12 @@ print(results)
 # Training using all train data
 Model = KNeighborsClassifier(n_neighbors= 3)
 Model.fit(X, y)
+
+save_path = r"E:\maktab_sharif\mini_project1_week9\mini-project-01\models\knn_model.pkl"
+os.makedirs(os.path.dirname(save_path), exist_ok=True)
+joblib.dump(Model, save_path)
+print(f"Model saved to {save_path}")
+
 y_hat = Model.predict(X)
 cm = confusion_matrix(y, y_hat)
 print(cm)
